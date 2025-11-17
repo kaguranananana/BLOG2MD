@@ -1,5 +1,5 @@
 # blog2md
-
+(vibe coding项目)
 `blog2md` 是一个将博客文章提取为纯正文 HTML 并转换为 Markdown 初稿的命令行工具，默认针对 CSDN、Hexo 等常见博客结构做了优化，也兼容大多数标准博客页面。你可以直接在命令行输入文章 URL，即可获得已经清洗干净的正文 HTML 和 Markdown，方便后续整理或发布到其他平台。
 
 ## 功能特性

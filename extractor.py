@@ -128,6 +128,8 @@ def clean_content(node: Tag) -> None:
     for tag in node.find_all(list(UNWANTED_TAGS)):
         tag.decompose()
     for el in node.find_all(True):
+        if not isinstance(el, Tag):
+            continue
         if el.name in {"pre", "code"}:
             continue
         if el.find_parent(class_=lambda cls: cls and ("highlight" in cls or "codeblock" in cls)):
