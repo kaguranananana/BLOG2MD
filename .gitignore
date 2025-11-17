@@ -1,0 +1,57 @@
+# -------------------------------
+# Python 常规忽略规则
+# -------------------------------
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pyd
+*.so
+
+# 虚拟环境
+.venv/
+venv/
+env/
+ENV/
+*.env
+*.venv
+
+# Jupyter / IPython
+.ipynb_checkpoints/
+
+# 生成的日志/缓存
+*.log
+*.tmp
+*.bak
+
+# -------------------------------
+# 项目特定忽略规则（你的情况）
+# -------------------------------
+
+# 你每次运行 blog2md 生成的输出文件
+example/*.html
+example/*.md
+
+# 如果你希望所有输出都忽略（更保险）
+*.html
+*.md
+
+# 但保留文档（例如 README.md, AGENTS.md）
+!README.md
+!AGENTS.md
+
+# -------------------------------
+# 操作系统文件
+# -------------------------------
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Linux
+*~
