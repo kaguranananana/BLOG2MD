@@ -29,8 +29,7 @@ ENV/
 # -------------------------------
 
 # 你每次运行 blog2md 生成的输出文件
-example/*.html
-example/*.md
+example/*
 
 # 如果你希望所有输出都忽略（更保险）
 *.html

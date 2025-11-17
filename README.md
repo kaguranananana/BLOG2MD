@@ -51,4 +51,4 @@ python blog2md.py "https://example.com/blog-post"
    python blog2md.py "https://yourname.github.io/2024/awesome-post/" --md-out notes/awesome.md
    ```
 
-命令完成后会在终端展示提取方式、字数统计及输出文件路径。若未自定义路径，所有结果会收纳在 `example/<slug>/` 子目录，方便按文章整理。
+命令完成后会在终端展示提取方式、字数统计及输出文件路径。若未自定义路径，所有结果会收纳在 `example/<slug>/` 子目录，Markdown 同目录下若包含图片会自动创建 `assets/` 并把图片保存其中，同时将 HTML 与 Markdown 中的图片链接指向对应的本地文件。

@@ -10,6 +10,7 @@ import random
 import re
 import sys
 import unicodedata
+from urllib.parse import urljoin, urlparse
 
 import requests
 from bs4 import BeautifulSoup
@@ -121,11 +122,19 @@ def main() -> None:
     title = extract_title(soup)
     slug = slugify(title)
     html_path, md_path = resolve_output_paths(slug, args.html_out, args.md_out)
+    assets_dir = os.path.join(os.path.dirname(os.path.abspath(md_path)) or ".", "assets")
     try:
         content_tag, method = extract_main_content(soup, args.url)
     except ValueError as exc:
         print(f"Error: {exc}", file=sys.stderr)
         sys.exit(1)
+    saved_images = process_images(
+        content_tag,
+        args.url,
+        assets_dir,
+        timeout=args.timeout,
+        user_agent=args.user_agent,
+    )
     inner_html = content_tag.decode()
     if content_tag.name != "article":
         inner_html = f"<article>\n{inner_html}\n</article>"
@@ -135,6 +144,8 @@ def main() -> None:
     approx_chars = len(content_tag.get_text(strip=True))
     print(f"[info] Extraction method: {method}")
     print(f"[info] Approximate characters: {approx_chars}")
+    if saved_images:
+        print(f"[info] 下载图片：{saved_images} 张 -> {assets_dir}")
     try:
         write_file(html_path, inner_html)
         print(f"[info] 正文 HTML 输出：{html_path}")
@@ -160,6 +171,69 @@ def resolve_output_paths(slug: str, html_out: str | None, md_out: str | None) ->
     else:
         md_path = os.path.join(base_dir, f"{slug}.md")
     return html_path, md_path
+
+
+def process_images(node, page_url: str, assets_dir: str, timeout: float, user_agent: str) -> int:
+    images = node.find_all("img")
+    if not images:
+        return 0
+    os.makedirs(assets_dir, exist_ok=True)
+    headers = {"User-Agent": user_agent or DEFAULT_UA}
+    used_names: set[str] = set()
+    saved = 0
+    for idx, img in enumerate(images, 1):
+        src = img.get("data-src") or img.get("src")
+        if not src:
+            continue
+        absolute = urljoin(page_url, src)
+        try:
+            resp = requests.get(absolute, headers=headers, timeout=timeout)
+            resp.raise_for_status()
+        except requests.RequestException:
+            continue
+        filename = _finalize_filename(absolute, resp.headers.get("Content-Type"))
+        filename = _ensure_unique_name(filename, used_names)
+        local_path = os.path.join(assets_dir, filename)
+        with open(local_path, "wb") as handle:
+            handle.write(resp.content)
+        rel_path = os.path.join("assets", filename).replace("\\", "/")
+        img["src"] = rel_path
+        if "data-src" in img.attrs:
+            img["data-src"] = rel_path
+        saved += 1
+    return saved
+
+
+def _finalize_filename(url: str, content_type: str | None) -> str:
+    path = urlparse(url).path
+    name = os.path.basename(path.rstrip("/")) or "image"
+    base, ext = os.path.splitext(name)
+    if not ext:
+        ext = _extension_from_type(content_type)
+    return f"{base}{ext}"
+
+
+def _ensure_unique_name(name: str, used: set[str]) -> str:
+    base, ext = os.path.splitext(name)
+    candidate = name
+    counter = 1
+    while candidate in used:
+        candidate = f"{base}_{counter}{ext}"
+        counter += 1
+    used.add(candidate)
+    return candidate
+
+
+def _extension_from_type(content_type: str | None) -> str:
+    if not content_type:
+        return ".jpg"
+    if "png" in content_type:
+        return ".png"
+    if "gif" in content_type:
+        return ".gif"
+    if "jpeg" in content_type or "jpg" in content_type:
+        return ".jpg"
+    return ".bin"
 
 
 if __name__ == "__main__":
